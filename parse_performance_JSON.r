@@ -1,17 +1,10 @@
 load_perf_data <- function(perf_JSON){
-  con_1 <- file(perf_JSON)
-  # read through the first time to get the number of samples
-  open(con_1);
-  #num_values <- 0
-  #data_type = "NA"
 
-  num_records <- 0
+  # load necessary libraries
+  library(RJSONIO)
 
-
-library(RJSONIO)
-  
-  inputFile <- "perf.log-3.10-4.10.two_lines"
-
+  # reading throug the file one line (record) at a time
+  inputFile <- perf_JSON
   con  <- file(inputFile, open = "r")
 
   while (length(oneLine <- readLines(con, n = 1, warn = FALSE)) > 0) {
@@ -28,10 +21,8 @@ library(RJSONIO)
     JSON_end <- lineJSON$end # numeric
     JSON_resp <- lineJSON$resp # numeric
     JSON_task <- lineJSON$task_stats # list
-
-
-    
-    ### Task Performancs ###
+ 
+    ### ### Task Performancs ### ###
     num_tasks <- dim(as.matrix(JSON_task))[1]
 
     # get the values for the first task
@@ -39,8 +30,8 @@ library(RJSONIO)
     JSON_task.start <- as.matrix(JSON_task)[[1]]['start']
     JSON_task.end <- as.matrix(JSON_task)[[1]]['end']
     JSON_task.resp <- as.matrix(JSON_task)[[1]]['resp']
-    JSON_task.size_infile <- as.matrix(JSON_task)[[1]]['size_infile']
-    JSON_task.size_outfile <- as.matrix(JSON_task)[[1]]['size_outfile']
+    JSON_task.size_infile <- sum(as.matrix(JSON_task)[[1]]['size_infile'][[1]]) # summing what could be multiple values
+    JSON_task.size_outfile <- sum(as.matrix(JSON_task)[[1]]['size_outfile'][[1]]) # summing what could be multiple values
      
     # get the values for tasks 2..n
     if( num_tasks > 1 ){
@@ -49,20 +40,38 @@ library(RJSONIO)
         JSON_task.start <- append(JSON_task.start, as.matrix(JSON_task)[[i]]['start'])
         JSON_task.end <- append(JSON_task.end, as.matrix(JSON_task)[[i]]['end'])
         JSON_task.resp <- append(JSON_task.resp, as.matrix(JSON_task)[[i]]['resp'])
-        JSON_task.size_infile <- append(JSON_task.size_infile,  as.matrix(JSON_task)[[i]]['size_infile'])
-        JSON_task.size_outfile <- append(append( JSON_task.size_outfile, as.matrix(JSON_task)[[i]]['size_infile']))
+        JSON_task.size_infile <- append(JSON_task.size_infile,  sum(as.matrix(JSON_task)[[i]]['size_infile'][[1]])) # can be a vector
+        JSON_task.size_outfile <- append(JSON_task.size_outfile, sum(as.matrix(JSON_task)[[i]]['size_outfile'][[1]])) # can be a vector
       }
     }
 
+    task_stats <- as.matrix(rbind( JSON_task.queued, JSON_task.start, JSON_task.end, JSON_task.resp, JSON_task.size_infile, JSON_task.size_outfile))
 
-
-
-
-    (
-
-                              
+    task.column_names <- "task_0"
+    if( num_tasks > 1  ){
+      for (i in 1:(num_tasks-1) ){
+        task.column_names <- append(task.column_names, paste("task_", i, sep="", collapse="")) 
+        }
+    }  
+    dimnames(task_stats)[[2]] <- task.column_names
+     
+    
+    ### ### ### Workunit Performance ### ### ###
+                          
     JSON_work <- lineJSON$work_stats # list
 
+    
+    # workunit id
+    id_task_wu
+    # so something like this
+    wu_id <- paste(JSON_id, "_", m, "_", n, sep="", collapse="" )
+
+    # but this works
+    JSON_work[[1]]
+    JSON_work[[10]]
+    # but only because one work unit per task? -- no - depends on if you want to be able to map wu's back to tasks
+    
+    
     JSON_work.
     JSON_work.
     JSON_work.
